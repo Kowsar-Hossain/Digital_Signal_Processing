@@ -1,7 +1,7 @@
 '''
 Consider the continuous-time analog signal x(t)=3cos(100πt). Sample the analog 
 signal at 200 Hz and 75 Hz. Show the discrete-time signal after sampling. ⟹ 
-realization. 
+realization. .
 
 '''
 import numpy as np
