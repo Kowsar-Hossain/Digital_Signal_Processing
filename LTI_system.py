@@ -1,3 +1,7 @@
+#The impulse response of a discrete-time LTI system is h(n)={u(n)−u(n−5)}.
+#Determine the output of the system for the input x[n]=u(n), using the convolution
+#sum
+
 import numpy as np
 import matplotlib.pyplot as plt
 
