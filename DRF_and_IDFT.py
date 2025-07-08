@@ -1,36 +1,76 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft  # safer import than numpy.fft
 
-# 1. Sampling settings
-fs = 8000                      # Sampling frequency
-t = np.arange(0, 1, 1/fs)      # Time vector (1 second duration)
+N = 64
+n = np.arange(N)
+fs = 8000
+t = n/fs
 
-# 2. Signal: sum of two sinusoids
-x = np.sin(2*np.pi*1000*t) + 0.5*np.sin(2*np.pi*2000*t + 4*np.pi)
+def xa(t):
+    return np.sin(2000*np.pi*t)+0.5*np.sin(4000*np.pi*t+4*np.pi)
+def hanning(N):
+     return 0.5*(1-np.cos(2*np.pi*np.arange(N)/N-1))
 
-# 3. Perform FFT (Discrete Fourier Transform)
-X = fft(x)
+def dft(x):
+    N = len(x)
+    X = np.zeros(N,dtype=complex)
+    for k in range(N):
+         for n in range(N):
+              X[k]+=x[n]*np.exp(-2j*np.pi*k*n/N)
+    return X 
 
-# 4. Reconstruct using IFFT
-x_rec = ifft(X)
+def idft(X):
+    N = len(X)
+    x = np.zeros(N,dtype=complex)
+    for n in range (N):
+          for k in range(N):
+               x[n]+=X[k]*np.exp(2j*np.pi*k*n/N)
+          x[n] /= N
+    return x
 
-# 5. Plotting
-plt.figure(figsize=(10, 4))
+freq = np.arange(N)*fs/N
+x = xa(t)
 
-# Plot magnitude spectrum (only positive frequencies)
-plt.subplot(1, 2, 1)
-plt.plot(np.linspace(0, fs/2, fs//2), np.abs(X[:fs//2]))
-plt.title('DFT Magnitude Spectrum')
-plt.xlabel('Frequency (Hz)')
-plt.ylabel('|X(f)|')
+x_hanning = hanning(N)
+hanning_x = x*x_hanning
 
-# Plot reconstructed signal (real part only)
-plt.subplot(1, 2, 2)
-plt.plot(t, x_rec.real)
-plt.title('Reconstructed Signal via IFFT')
-plt.xlabel('Time (s)')
-plt.ylabel('Amplitude')
+x_dft = dft(x)
+x_hanning_dft = dft(hanning_x)
 
-plt.tight_layout()
+x_idft = idft(x_dft)
+x_idft_hanning = idft(x_hanning_dft)
+
+plt.subplot(3,2,1)
+plt.plot(t,x,label="original",color="g")
+plt.plot(t,hanning_x,label="Hanning",color="r")
+# plt.title("Before DFT")
+plt.grid(True)
+plt.legend()
+
+plt.subplot(3,2,2)
+plt.stem(freq,x_hanning,label="Hanning Window")
+# plt.title("Hanning Window")
+plt.grid(True)
+plt.legend()
+
+plt.subplot(3,2,3)
+plt.stem(freq,abs(x_dft),label="Frequency Spectrum")
+# plt.title("After DFT")
+plt.grid(True)
+plt.legend()
+
+plt.subplot(3,2,4)
+plt.stem(freq,np.angle(x_hanning_dft,deg=True),label="Hanning Phase Spectrum",linefmt="r",basefmt="r",markerfmt="r")
+# plt.title("After DFT")
+plt.grid(True)
+plt.legend()
+
+plt.subplot(3,2,5)
+plt.plot(t,x_idft,label="After IDFT",color="g")
+plt.plot(t,x_idft_hanning,label="Hanning",color="r")
+# plt.title("Before DFT")
+plt.grid(True)
+plt.legend()
+
 plt.show()
+plt.tight_layout()
