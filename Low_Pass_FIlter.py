@@ -1,31 +1,43 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.signal import firwin  # 💡 Import added
+from scipy.signal import firwin
 
-# Sampling setup
-fs = 500  # Sampling frequency
-n = np.arange(0, 1, 1/fs)  # Time vector: 1 second duration
+fs = 500
+n = np.arange(0,1,1/fs)
 
-# Noisy signal: 10 Hz desired + 100 Hz noise
-clean_signal = np.sin(2 * np.pi * 10 * n)
-noise = 0.5 * np.sin(2 * np.pi * 100 * n)
-signal = clean_signal + noise
+clean_signal = np.sin(2*np.pi*10*n)
+noise_signal = np.sin(2*np.pi*100*n)
+x = clean_signal + noise_signal
 
-# Design Low-Pass Filter
-cutoff = 0.1  # Normalized cutoff = (desired cutoff frequency) / (Nyquist = fs/2)
-h = firwin(31, cutoff)  # FIR filter with 31 taps
+cutoff = 0.1
+h = firwin(31, cutoff)
 
-# Apply the filter
-filtered_signal = np.convolve(signal, h, mode='same')
+def convolution(x, h):
+    len_x = len(x)
+    len_h = len(h)
+    len_y = len(x) + len(h) - 1
+    y = []
+    for i in range(len_y):
+        sum = 0
+        for k in range(len_h):
+            if i-k >= 0 and i-k < len_x:
+                sum += h[k] * x[i-k]
+        y.append(sum)
+    return y     
 
-# Plot results
-plt.figure(figsize=(10, 4))
-plt.plot(n, signal, 'gray', label='Noisy Signal')
-plt.plot(n, filtered_signal, 'red', label='Filtered Signal')
-plt.plot(n, clean_signal, 'blue', label='Clean_signal')
+filtered_signal = convolution(x,h)
+
+start = (len(h) - 1) // 2
+filtered_signal = filtered_signal[start:start + len(x)]
+
+#plot
+plt.figure(figsize=(10,4))
+plt.plot(n, x, 'r', label='Noise Signal')
+plt.plot(n, clean_signal, 'white', label='Clean Signal')
+plt.plot(n, filtered_signal,'b', label='Filtered Signal')
 plt.legend()
-plt.title('Low-pass FIR Filter Output')
-plt.xlabel('Time (s)')
+plt.title('Low pass filter Output')
+plt.xlabel('Time(s)')
 plt.ylabel('Amplitude')
 plt.grid(True)
 plt.tight_layout()
