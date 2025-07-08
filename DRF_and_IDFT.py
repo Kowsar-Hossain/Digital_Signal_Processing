@@ -1,76 +1,99 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Parameters
 N = 64
-n = np.arange(N)
 fs = 8000
-t = n/fs
+n = np.arange(N)
+t = n / fs
 
+# Input signal
 def xa(t):
-    return np.sin(2000*np.pi*t)+0.5*np.sin(4000*np.pi*t+4*np.pi)
+    return np.sin(2000 * np.pi * t) + 0.5 * np.sin(4000 * np.pi * t + 4 * np.pi)
+
+# Hanning window function
 def hanning(N):
-     return 0.5*(1-np.cos(2*np.pi*np.arange(N)/N-1))
+    return 0.5 * (1 - np.cos(2 * np.pi * np.arange(N) / (N - 1)))  # Corrected formula
 
-def dft(x):
+# Manual DFT
+def DFT(x):
     N = len(x)
-    X = np.zeros(N,dtype=complex)
+    X = np.zeros(N, dtype=complex)
     for k in range(N):
-         for n in range(N):
-              X[k]+=x[n]*np.exp(-2j*np.pi*k*n/N)
-    return X 
+        for n in range(N):
+            X[k] += x[n] * np.exp(-2j * np.pi * k * n / N)
+    return X
 
-def idft(X):
+# Manual IDFT
+def IDFT(X):
     N = len(X)
-    x = np.zeros(N,dtype=complex)
-    for n in range (N):
-          for k in range(N):
-               x[n]+=X[k]*np.exp(2j*np.pi*k*n/N)
-          x[n] /= N
+    x = np.zeros(N, dtype=complex)
+    for n in range(N):
+        for k in range(N):  # Fixed range
+            x[n] += X[k] * np.exp(2j * np.pi * k * n / N)
+    x /= N  # Moved outside loop
     return x
 
-freq = np.arange(N)*fs/N
+# Frequency vector
+a_freq = np.arange(N) * fs / N
 x = xa(t)
 
-x_hanning = hanning(N)
-hanning_x = x*x_hanning
+# Apply Hanning
+Hanning = hanning(N)
+Hanning_x = x * Hanning
 
-x_dft = dft(x)
-x_hanning_dft = dft(hanning_x)
+# DFTs
+dft = DFT(x)
+Hanning_dft = DFT(Hanning_x)
 
-x_idft = idft(x_dft)
-x_idft_hanning = idft(x_hanning_dft)
+# IDFTs
+idft = IDFT(dft)
+Hanning_idft = IDFT(Hanning_dft)
 
-plt.subplot(3,2,1)
-plt.plot(t,x,label="original",color="g")
-plt.plot(t,hanning_x,label="Hanning",color="r")
-# plt.title("Before DFT")
+# ----------------------------- Plotting -----------------------------
+
+plt.figure(figsize=(12, 10))
+
+# Original vs Hanning windowed signal
+plt.subplot(3, 2, 1)
+plt.plot(t, x, label='Original Signal', color='g')
+plt.plot(t, Hanning_x, label='Hanning Windowed Signal', color='r')
+plt.title('Time Domain Signals')
+plt.xlabel('Time (s)')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(3,2,2)
-plt.stem(freq,x_hanning,label="Hanning Window")
-# plt.title("Hanning Window")
+# Hanning window shape
+plt.subplot(3, 2, 2)
+plt.stem(n, Hanning, linefmt='b-', markerfmt='bo', basefmt='k-')
+plt.title('Hanning Window')
+plt.grid(True)
+
+# Magnitude of DFT without window
+plt.subplot(3, 2, 3)
+plt.stem(a_freq, abs(dft), linefmt='y-', markerfmt='yo', basefmt='k-')
+plt.title('DFT Magnitude (No Window)')
+plt.grid(True)
+
+# Magnitude of DFT with Hanning window
+plt.subplot(3, 2, 4)
+plt.stem(a_freq, abs(Hanning_dft), linefmt='m-', markerfmt='mo', basefmt='k-')
+plt.title('DFT Magnitude (Hanning Window)')
+plt.grid(True)
+
+# Phase of DFT with Hanning
+plt.subplot(3, 2, 5)
+plt.stem(a_freq, np.angle(Hanning_dft, deg=True), linefmt='c-', markerfmt='co', basefmt='k-')
+plt.title('DFT Phase (Hanning Window)')
+plt.grid(True)
+
+# Reconstructed signals from IDFT
+plt.subplot(3, 2, 6)
+plt.plot(t, idft.real, label='IDFT of Original', color='b')
+plt.plot(t, Hanning_idft.real, label='IDFT of Hanning Windowed', color='orange')
+plt.title('Reconstructed Signal via IDFT')
 plt.grid(True)
 plt.legend()
 
-plt.subplot(3,2,3)
-plt.stem(freq,abs(x_dft),label="Frequency Spectrum")
-# plt.title("After DFT")
-plt.grid(True)
-plt.legend()
-
-plt.subplot(3,2,4)
-plt.stem(freq,np.angle(x_hanning_dft,deg=True),label="Hanning Phase Spectrum",linefmt="r",basefmt="r",markerfmt="r")
-# plt.title("After DFT")
-plt.grid(True)
-plt.legend()
-
-plt.subplot(3,2,5)
-plt.plot(t,x_idft,label="After IDFT",color="g")
-plt.plot(t,x_idft_hanning,label="Hanning",color="r")
-# plt.title("Before DFT")
-plt.grid(True)
-plt.legend()
-
-plt.show()
 plt.tight_layout()
+plt.show()
