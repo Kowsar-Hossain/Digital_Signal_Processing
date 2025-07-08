@@ -1,4 +1,2 @@
-Digital_Signal_Processing
-
--Author
-MD:KOWSAR HOSSAIN
+Digital_Signal_Processing_Lab
+Md.Kowsar Hossain
